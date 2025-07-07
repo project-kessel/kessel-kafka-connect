@@ -1,0 +1,4 @@
+# avoids accidentally committing a generated connector template when following docs
+deploy-debezium.yml
+venv/
+.idea
