@@ -6,9 +6,21 @@ Currently the Connect image only contains the Debezium connector for PostgreSQL,
 
 Plugins are installed using the [docker-maven-download](https://github.com/debezium/container-images/blob/main/connect-base/2.7/docker-maven-download.sh) script provided by Debezium's container-images repo and is useful for installing other plugins and libs. Review the script for more information on how to use it.
 
-To build the image locally:
+### To Build Container Image:
 
-`podman build -t quay.io/<YOUR-REPOSITORY>/<SERVICE_NAME>-kafka-connect -f Containerfile`
+_Linux/Windows_
+```shell
+export IMAGE=your-quay-repo
+make docker-build-push
+```
+
+_MacOS_
+
+```shell
+export QUAY_REPO_INVENTORY=your-quay-repo # required
+podman login quay.io # required, this target assumes you are already logged in
+make build-push-minimal
+```
 
 ### Kafka Connect Deployment
 The KafkaConnect CR templates can be used to deploy a Kafka Connect cluster using the image built with the provided Dockerfile. The template is designed to allow for multiple service providers to use the same template while avoiding name duplication as these Connect clusters will likely live in the same namespace
