@@ -27,11 +27,8 @@ To use the templates directly:
 
 **Without Auth**
 ```shell
-oc process --local -f kafka-connect/kafkaconnect-w-auth.yml \
-    -p SERVICE_NAME=<Name of Service Providers Service> \
-    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> \
-    -p KAFKA_CONNECT_IMAGE=<Kafka Connect image name and tag> \
-    -p VERSION=<Kafka Version> | oc apply -f -
+oc process --local -f deploy/kafkaconnect-no-auth.yml \
+    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> | oc apply -f -
 ```
 
 > [!NOTE]
@@ -41,12 +38,9 @@ oc process --local -f kafka-connect/kafkaconnect-w-auth.yml \
 
 **With Auth**
 ```shell
-oc process --local -f kafka-connect/kafkaconnect-w-auth.yml \
-    -p SERVICE_NAME=<Name of Service Providers Service> \
+oc process --local -f deploy/kafkaconnect-w-auth.yml \
     -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> \
     -p KAFKA_USERNAME=<Kafka Username> \
     -p KAFKA_USER_SECRET_NAME=<Name of Kafka Secret> \
-    -p KAFKA_USER_SECRET_KEY=<Key in Secret where password is defined> \
-    -p KAFKA_CONNECT_IMAGE=<Kafka Connect image name and tag>  \
-    -p VERSION=<Kafka Version> | oc apply -f -
+    -p KAFKA_USER_SECRET_KEY=<Key in Secret where password is defined> | oc apply -f -
 ```
