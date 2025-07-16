@@ -6,9 +6,21 @@ Currently the Connect image only contains the Debezium connector for PostgreSQL,
 
 Plugins are installed using the [docker-maven-download](https://github.com/debezium/container-images/blob/main/connect-base/2.7/docker-maven-download.sh) script provided by Debezium's container-images repo and is useful for installing other plugins and libs. Review the script for more information on how to use it.
 
-To build the image locally:
+### To Build Container Image:
 
-`podman build -t quay.io/<YOUR-REPOSITORY>/<SERVICE_NAME>-kafka-connect -f Containerfile`
+_Linux/Windows_
+```shell
+export IMAGE=your-quay-repo
+make docker-build-push
+```
+
+_MacOS_
+
+```shell
+export QUAY_REPO_INVENTORY=your-quay-repo # required
+podman login quay.io # required, this target assumes you are already logged in
+make build-push-minimal
+```
 
 ### Kafka Connect Deployment
 The KafkaConnect CR templates can be used to deploy a Kafka Connect cluster using the image built with the provided Dockerfile. The template is designed to allow for multiple service providers to use the same template while avoiding name duplication as these Connect clusters will likely live in the same namespace
@@ -27,11 +39,8 @@ To use the templates directly:
 
 **Without Auth**
 ```shell
-oc process --local -f kafka-connect/kafkaconnect-w-auth.yml \
-    -p SERVICE_NAME=<Name of Service Providers Service> \
-    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> \
-    -p KAFKA_CONNECT_IMAGE=<Kafka Connect image name and tag> \
-    -p VERSION=<Kafka Version> | oc apply -f -
+oc process --local -f deploy/kafkaconnect-no-auth.yml \
+    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> | oc apply -f -
 ```
 
 > [!NOTE]
@@ -41,12 +50,9 @@ oc process --local -f kafka-connect/kafkaconnect-w-auth.yml \
 
 **With Auth**
 ```shell
-oc process --local -f kafka-connect/kafkaconnect-w-auth.yml \
-    -p SERVICE_NAME=<Name of Service Providers Service> \
+oc process --local -f deploy/kafkaconnect-w-auth.yml \
     -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> \
     -p KAFKA_USERNAME=<Kafka Username> \
     -p KAFKA_USER_SECRET_NAME=<Name of Kafka Secret> \
-    -p KAFKA_USER_SECRET_KEY=<Key in Secret where password is defined> \
-    -p KAFKA_CONNECT_IMAGE=<Kafka Connect image name and tag>  \
-    -p VERSION=<Kafka Version> | oc apply -f -
+    -p KAFKA_USER_SECRET_KEY=<Key in Secret where password is defined> | oc apply -f -
 ```

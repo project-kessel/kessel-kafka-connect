@@ -13,3 +13,7 @@ endif
 .PHONY: docker-build-push
 docker-build-push:
 	./build_deploy.sh
+
+.PHONY: build-push-minimal
+build-push-minimal:
+	./build_push_minimal.sh
