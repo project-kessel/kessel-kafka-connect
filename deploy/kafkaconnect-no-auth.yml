@@ -181,12 +181,6 @@ objects:
     name: kessel-kafka-connect
   spec:
     bootstrapServers: ${BOOTSTRAP_SERVERS}
-    authentication:
-      type: scram-sha-512
-      username: ${KAFKA_USERNAME}
-      passwordSecret:
-        secretName: ${KAFKA_USER_SECRET_NAME}
-        password: ${KAFKA_USER_SECRET_KEY}
     metricsConfig:
       type: jmxPrometheusExporter
       valueFrom:
@@ -204,7 +198,7 @@ objects:
       status.storage.topic: kessel-kafka-connect-cluster-status
       config.providers: secrets
       config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
-    image: ${KAFKA_CONNECT_IMAGE}:${IMAGE_TAG}
+    image: ${KAFKA_CONNECT_IMAGE}
     replicas: ${{CONNECT_REPLICAS}}
     resources:
       limits:
@@ -222,16 +216,6 @@ parameters:
   - name: BOOTSTRAP_SERVERS
     description: List of bootstrap servers (comma-separated list in 'hostname:port' notation)
     required: true
-  - name: KAFKA_USERNAME
-    description: Kafka Username used for the authentication
-    required: true
-  - name: KAFKA_USER_SECRET_NAME
-    description: The name of the Secret containing the password for the Kafka User
-    required: true
-  - name: KAFKA_USER_SECRET_KEY
-    description: The name of the key in the Secret under which the password is stored
-    required: true
-    value: password
   - name: CONFIG_STORAGE_REPLICATION_FACTOR
     description: Replication factor for the topic where connector configurations are stored
     value: "1"
@@ -244,10 +228,6 @@ parameters:
   - name: KAFKA_CONNECT_IMAGE
     value: quay.io/redhat-services-prod/project-kessel-tenant/kessel-kafka-connect
     description: Container image name for the connect cluster pods
-  - name: IMAGE_TAG
-    required: true
-    value: latest
-    description: Image tag for the connect image
   - name: CONNECT_REPLICAS
     description: Number of replicas in the connect cluster
     value: "1"
