@@ -181,6 +181,8 @@ objects:
     name: kessel-kafka-connect
   spec:
     bootstrapServers: ${BOOTSTRAP_SERVERS}
+    tls:
+      trustedCertificates: []
     authentication:
       type: scram-sha-512
       username: ${KAFKA_USERNAME}
@@ -208,11 +210,11 @@ objects:
     replicas: ${{CONNECT_REPLICAS}}
     resources:
       limits:
+        cpu: 1
+        memory: 2Gi
+      requests:
         cpu: 500m
         memory: 1Gi
-      requests:
-        cpu: 250m
-        memory: 512Mi
     template:
       pod:
         imagePullSecrets:
