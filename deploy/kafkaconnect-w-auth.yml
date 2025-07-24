@@ -196,13 +196,9 @@ objects:
           key: metrics-config.yml
           name: kessel-kafka-connect-metrics
     config:
-      config.storage.replication.factor: ${CONFIG_STORAGE_REPLICATION_FACTOR}
-      config.storage.topic: kessel-kafka-connect-cluster-configs
-      connector.client.config.override.policy: All
       group.id: kessel-kafka-connect-cluster
-      offset.storage.replication.factor: ${OFFSET_STORAGE_REPLICATION_FACTOR}
+      config.storage.topic: kessel-kafka-connect-cluster-configs
       offset.storage.topic: kessel-kafka-connect-cluster-offsets
-      status.storage.replication.factor: ${STATUS_STORAGE_REPLICATION_FACTOR}
       status.storage.topic: kessel-kafka-connect-cluster-status
       config.providers: secrets
       config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
