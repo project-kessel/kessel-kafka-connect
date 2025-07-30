@@ -4,6 +4,12 @@
 # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
+registries:
+  redhat:
+    type: docker-registry
+    url: https://registry.redhat.io
+    username: ${{secrets.KESSEL_REGISTRY_SA_USERNAME}}
+    password: ${{secrets.KESSEL_REGISTRY_SA_TOKEN}}
 updates:
   - package-ecosystem: "docker" # to check versions used in Dockerfile
     directory: "/"
