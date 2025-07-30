@@ -56,7 +56,7 @@ objects:
   spec:
     class: io.debezium.connector.postgresql.PostgresConnector
     tasksMax: ${{MAX_TASKS}}
-    state: stopped
+    state: ${CONNECTOR_STATE}
     config:
       database.server.name: kessel-inventory-db
       database.dbname: ${secrets:kessel-inventory-db:db.name}
@@ -105,6 +105,9 @@ parameters:
   - name: VERSION
     description: Kafka Connect version to use (should match the Kafka version of cluster and connect base image)
     value: "3.9.0"
+  - name: CONNECTOR_STATE
+    description: Defines the state the connector should be deployed in ('stopped', 'running', 'paused' only)
+    value: stopped
   - name: KAFKA_CONNECT_INSTANCE
     value: kessel-kafka-connect
     description: Name of the target Kafka Connect instance for Connector
