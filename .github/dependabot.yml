@@ -10,8 +10,11 @@ registries:
     url: https://registry.redhat.io
     username: ${{secrets.KESSEL_REGISTRY_SA_USERNAME}}
     password: ${{secrets.KESSEL_REGISTRY_SA_TOKEN}}
+    replaces-base: true
 updates:
   - package-ecosystem: "docker" # to check versions used in Dockerfile
+    registries:
+     - redhat
     directory: "/"
     schedule:
       interval: "daily"
