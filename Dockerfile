@@ -12,8 +12,8 @@ USER root:root
 # Update the debezium maven and release versions to update Debezium and related plugins
 ENV KAFKA_CONNECT_PLUGINS_DIR=/opt/kafka/plugins \
     EXTERNAL_LIBS_DIR=/opt/kafka/libs \
-    DEBEZIUM_MAVEN_VERSION=2.7.3.Final \
-    DEBEZIUM_RELEASE_VERSION=2.7
+    DEBEZIUM_MAVEN_VERSION=3.1.3.Final \
+    DEBEZIUM_RELEASE_VERSION=3.1
 
 RUN rm -rf /opt/kafka-exporter
 
