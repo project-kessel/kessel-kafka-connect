@@ -1,0 +1,127 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: kafka-connect-template
+objects:
+- apiVersion: kafka.strimzi.io/v1beta2
+  kind: KafkaConnect
+  metadata:
+    annotations:
+      strimzi.io/use-connector-resources: "true"
+    name: kessel-kafka-connect
+  spec:
+    bootstrapServers: ${BOOTSTRAP_SERVERS}
+    tls:
+      trustedCertificates:
+        - secretName: kessel-kafka-connect-config
+          certificate: cacert
+    authentication:
+      type: scram-sha-512
+      username: ${KAFKA_USERNAME}
+      passwordSecret:
+        secretName: kessel-kafka-connect-config
+        password: ${KAFKA_USER_SECRET_KEY}
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          key: metrics-config.yml
+          name: kessel-kafka-connect-metrics
+    config:
+      group.id: kessel-kafka-connect-cluster
+      config.storage.topic: kessel-kafka-connect-cluster-configs
+      offset.storage.topic: kessel-kafka-connect-cluster-offsets
+      status.storage.topic: kessel-kafka-connect-cluster-status
+      config.providers: secrets
+      config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
+    image: ${KAFKA_CONNECT_IMAGE}:${IMAGE_TAG}
+    replicas: ${{CONNECT_REPLICAS}}
+    resources:
+      limits:
+        cpu: 1
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+    template:
+      pod:
+        imagePullSecrets:
+        - name: quay-cloudservices-pull
+    version: ${VERSION}
+
+- apiVersion: kafka.strimzi.io/v1beta2
+  kind: KafkaConnector
+  metadata:
+    name: kessel-inventory-api-connector
+    labels:
+      strimzi.io/cluster: ${KAFKA_CONNECT_INSTANCE}
+  spec:
+    class: io.debezium.connector.postgresql.PostgresConnector
+    tasksMax: ${{MAX_TASKS}}
+    state: ${CONNECTOR_STATE}
+    config:
+      database.server.name: kessel-inventory-db
+      database.dbname: ${secrets:kessel-inventory-db:db.name}
+      database.hostname: ${secrets:kessel-inventory-db:db.host}
+      database.port: ${secrets:kessel-inventory-db:db.port}
+      database.user: ${secrets:kessel-inventory-db:db.user}
+      database.password: ${secrets:kessel-inventory-db:db.password}
+      snapshot.mode: no_data
+      slot.name: inventory_api_debezium
+      topic.prefix: kessel-inventory
+      table.include.list: public.outbox_events
+      transforms: outbox
+      transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+      transforms.outbox.table.fields.additional.placement: operation:header, txid:header
+      transforms.outbox.table.expand.json.payload: true
+      value.converter: org.apache.kafka.connect.json.JsonConverter
+      plugin.name: pgoutput
+      heartbeat.interval.ms: ${DEBEZIUM_HEARTBEAT_INTERVAL_MS}
+      heartbeat.action.query: ${DEBEZIUM_ACTION_QUERY}
+      topic.heartbeat.prefix: ${TOPIC_HEARTBEAT_PREFIX}
+      poll.interval.ms: ${DEBEZIUM_POLL_INTERVAL_MS}
+parameters:
+  - name: BOOTSTRAP_SERVERS
+    description: List of bootstrap servers (comma-separated list in 'hostname:port' notation)
+    required: true
+  - name: KAFKA_USERNAME
+    description: Kafka Username used for the authentication
+    required: true
+  - name: KAFKA_USER_SECRET_KEY
+    description: The name of the key in the Secret under which the password is stored
+    required: true
+    value: password
+  - name: KAFKA_CONNECT_IMAGE
+    value: quay.io/redhat-services-prod/project-kessel-tenant/kessel-kafka-connect
+    description: Container image name for the connect cluster pods
+  - name: IMAGE_TAG
+    required: true
+    value: latest
+    description: Image tag for the connect image
+  - name: CONNECT_REPLICAS
+    description: Number of replicas in the connect cluster
+    value: "1"
+  - name: VERSION
+    description: Kafka Connect version to use (should match the Kafka version of cluster and connect base image)
+    value: "3.9.0"
+  - name: CONNECTOR_STATE
+    description: Defines the state the connector should be deployed in ('stopped', 'running', 'paused' only)
+    value: stopped
+  - name: KAFKA_CONNECT_INSTANCE
+    value: kessel-kafka-connect
+    description: Name of the target Kafka Connect instance for Connector
+  - name: MAX_TASKS
+    value: "1"
+    description: How many tasks the Kafka Connect instance can create to process this Connector's work
+  - name: TOPIC_HEARTBEAT_PREFIX
+    value: debezium-heartbeat
+    description: Prefix for the connector heartbeat topic
+  - name: DEBEZIUM_ACTION_QUERY
+    value: "SELECT pg_logical_emit_message(false, 'heartbeat', now()::varchar);"
+    description: Query action that runs for each heartbeat event
+  - name: DEBEZIUM_HEARTBEAT_INTERVAL_MS
+    value: "300000"
+    description: The interval for the Debezium heartbeat in ms
+  - name: DEBEZIUM_POLL_INTERVAL_MS
+    value: "250"
+    description: The interval for the Debezium batch processing
