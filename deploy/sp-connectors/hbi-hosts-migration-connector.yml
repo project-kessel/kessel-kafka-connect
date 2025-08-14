@@ -13,7 +13,7 @@ objects:
     labels:
       strimzi.io/cluster: ${KAFKA_CONNECT_INSTANCE}
   spec:
-    state: stopped
+    state: ${CONNECTOR_STATE}
     class: io.debezium.connector.postgresql.PostgresConnector
     tasksMax: ${{MAX_TASKS}}
     config:
@@ -58,7 +58,6 @@ parameters:
   required: true
 - name: BOOTSTRAP_SERVERS
   description: Kafka Bootstrap server(s) URL(s)
-  # value: "${ENV_NAME}-kafka-bootstrap:9092" # default for ephemeral
   required: true
 - name: DB_SECRET_NAME
   description: Name of the secret that contains database credentials
@@ -66,6 +65,9 @@ parameters:
 - name: KAFKA_CONNECT_INSTANCE
   value: kessel-kafka-connect
   description: Name of the target Kafka Connect instance for Connector
+- name: CONNECTOR_STATE
+  description: Defines the state the connector should be deployed in ('stopped', 'running', 'paused' only)
+  value: stopped
 - name: MAX_TASKS
   value: "1"
   description: How many tasks the Kafka Connect instance can create to process this Connector's work
