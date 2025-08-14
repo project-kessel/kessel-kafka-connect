@@ -23,13 +23,13 @@ make build-push-minimal
 ```
 
 ### Kafka Connect Deployment
-The KafkaConnect CR templates can be used to deploy a Kafka Connect cluster using the image built with the provided Dockerfile. The template is designed to allow for multiple service providers to use the same template while avoiding name duplication as these Connect clusters will likely live in the same namespace
+The KafkaConnect CR templates can be used to deploy a Kafka Connect cluster using the image built with the provided Dockerfile. There are 3 versions of the KafkaConnect CR: one with authentication, one without, and one for FedRAMP
 
-There are 2 versions of the KafkaConnect CR: one with authentication, one without
+The `kafkaconnect-no-auth.yml` template is useful for Ephemeral testing, where the Clowder-provided Kafka cluster can be used for the Connect cluster and does not require any authentication. In ephemeral, by default Kessel Inventory API ships with Kessel Kafka Connect and can be deployed that way.
 
-The `kafkaconnect-no-auth.yml` template is useful for Ephemeral, where the Clowder-provided Kafka cluster can be used for the Connect cluster and does not require any authentication.
+The `kafkaconnect-w-auth.yml` template is used for Stage/Prod and relies on AWS MSK. It is configured with SASL/SCRAM and requires credentials to authenticate to the cluster. In order to authenticate, you will need a Kakfa user configured for the MSK cluster. See the **Managed Streaming for Apache Kafka (MSK) via App-Interface** section of the App Interface docs on how to add users. Note, the Inventory API Debezium Connector is also deployed as part of this manifest
 
-The `kafkaconnect-w-auth.yml` template is useful for adding to your deployment file for targeting stage/production environments where MSK is likely used and is configured with SASL/SCRAM. In order to authenticate, you will need a Kakfa user configured for the MSK cluster. See the **Managed Streaming for Apache Kafka (MSK) via App-Interface** section of the App Interface docs on how to add users.
+The final template, `kafka-connect-fedramp.yml`, is similar to the `kafkaconnect-w-auth.yml` deploy file but is designed for FedRAMP and leveraging a Strimzi Kafka cluster vs MSK.
 
 #### Using the Templates
 
