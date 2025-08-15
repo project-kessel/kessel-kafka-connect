@@ -1,5 +1,6 @@
 # Leverages Streams for Apache Kafka Images
 # Streams for Apache Kafka 2.9 is based on Apache Kafka 3.9.0 and Strimzi 0.45.x.
+ARG BASE_IMAGE_VERSION
 FROM ${BASE_IMAGE_VERSION:-registry.redhat.io/amq-streams/kafka-39-rhel9:2.9.1-2}
 USER root:root
 
