@@ -23,7 +23,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/project-kessel-tenant/kessel-kafka-connect:{{revision}}
+    value: quay.io/redhat-user-workloads/project-kessel-tenant/kessel-kafka-connect:{{revision}}-fedramp
   - name: dockerfile
     value: Dockerfile.fedramp
   - name: path-context
