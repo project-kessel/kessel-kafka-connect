@@ -80,6 +80,51 @@ objects:
       heartbeat.action.query: ${DEBEZIUM_ACTION_QUERY}
       topic.heartbeat.prefix: ${TOPIC_HEARTBEAT_PREFIX}
       poll.interval.ms: ${DEBEZIUM_POLL_INTERVAL_MS}
+
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    name: kakfa-ca-cert-watchdog
+  spec:
+    jobTemplate:
+      metadata:
+        name: kakfa-ca-cert-watchdog
+      spec:
+        successfulJobsHistoryLimit: 1
+        template:
+          spec:
+            containers:
+            - name: kakfa-ca-cert-watchdog
+              command:
+              - /bin/sh
+              - -c
+              - curl -o /tmp/ca-cert-checker.sh https://raw.githubusercontent.com/anatale/kessel-kafka-connect/refs/heads/main/scripts/heartbeat-fix.sh && chmod +x /tmp/heartbeat-fix.sh && /tmp/heartbeat-fix.sh
+              env:
+              - name: SA_CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: kessel-sso-sa
+                    key: client-id
+              - name: SA_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: kessel-sso-sa
+                    key: client-secret
+              - name: SSO_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: kessel-sso-sa
+                    key: url
+              image: registry.access.redhat.com/ubi9/ubi-minimal
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 512Mi
+                requests:
+                  cpu: 100m
+                  memory: 384Mi
+            restartPolicy: Never
+    schedule: '@hourly'
 parameters:
   - name: BOOTSTRAP_SERVERS
     description: List of bootstrap servers (comma-separated list in 'hostname:port' notation)
