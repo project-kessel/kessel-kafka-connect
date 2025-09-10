@@ -80,6 +80,42 @@ objects:
       heartbeat.action.query: ${DEBEZIUM_ACTION_QUERY}
       topic.heartbeat.prefix: ${TOPIC_HEARTBEAT_PREFIX}
       poll.interval.ms: ${DEBEZIUM_POLL_INTERVAL_MS}
+
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    name: kakfa-ca-cert-watchdog
+  spec:
+    jobTemplate:
+      metadata:
+        name: kakfa-ca-cert-watchdog
+      spec:
+        successfulJobsHistoryLimit: 1
+        template:
+          spec:
+            containers:
+            - name: kakfa-ca-cert-watchdog
+              command:
+              - /bin/sh
+              - -c
+              - curl -o /tmp/ca-cert-checker.sh https://raw.githubusercontent.com/project-kessel/kessel-kafka-connect/refs/heads/main/scripts/ca-cert-checker.sh && chmod +x /tmp/ca-cert-checker.sh && /tmp/ca-cert-checker.sh
+              env:
+              - name: WEBHOOK_URL
+                value: ${WEBHOOK_URL}
+              - name: ENV
+                value: ${ENV}
+              - name: KAFKA_BOOTSTRAP_SERVERS
+                value: ${BOOTSTRAP_SERVERS}
+              image: registry.access.redhat.com/ubi9/ubi
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 512Mi
+                requests:
+                  cpu: 100m
+                  memory: 384Mi
+            restartPolicy: Never
+    schedule: '@daily'
 parameters:
   - name: BOOTSTRAP_SERVERS
     description: List of bootstrap servers (comma-separated list in 'hostname:port' notation)
@@ -125,3 +161,7 @@ parameters:
   - name: DEBEZIUM_POLL_INTERVAL_MS
     value: "250"
     description: The interval for the Debezium batch processing
+  - name: WEBHOOK_URL
+    description: High side Google Chat Webhook URL for CA Cert Watcher alerts
+  - name: ENV
+    description: Environment where the service is running (int, stage, prod only)
