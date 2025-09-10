@@ -1,8 +1,6 @@
 #!/bin/bash
 
 readonly TEN_DAYS_IN_SECONDS=864000
-readonly TEST=9936000
-
 EXPIRING=false
 
 # Fetch the CA Cert
@@ -26,14 +24,8 @@ if [[ $? -ne 0 ]]; then
     EXPIRING=true
 fi
 
-# Expect to fail check
-openssl x509 -checkend $TEST -noout -in $CA_CERT
-if [[ $? -ne 0 ]]; then
-    EXPIRING=true
-fi
-
 if [[ "$EXPIRING" == "true" ]]; then
-    MESSAGE='{"text":"ALERT: IGNORE_TEST_ALERT Kafka Cluster CA Cert Expiring within 10 days
+    MESSAGE='{"text":"ALERT: Kafka Cluster CA Cert Expiring within 10 days
     Cluster Name: platform-mq-'"${ENV}"'
     Expiration Date: '"${CA_CERT_EXPIRATION}"'\n
     Alert: Kafka Cluster CA Cert expiration is approaching. The CA Cert will automatically be rotated. Services that require the CA cert for trust must be updated for the new CA Cert when available"}
