@@ -21,7 +21,7 @@ objects:
       signal.enabled.channels: "source,kafka"
       signal.kafka.topic: "host-inventory.signal"
       signal.kafka.bootstrap.servers: ${BOOTSTRAP_SERVERS}
-      signal.data.collection: "hbi.signal"
+      signal.data.collection: "hbi.debezium_signal"
       database.server.name: host-inventory-db
       database.dbname: ${secrets:${DB_SECRET_NAME}:db.name}
       database.hostname: ${secrets:${DB_SECRET_NAME}:db.host}
