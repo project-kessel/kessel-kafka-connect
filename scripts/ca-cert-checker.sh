@@ -1,6 +1,9 @@
 #!/bin/bash
 
-readonly TEN_DAYS_IN_SECONDS=864000
+# Streams renews CA certs when they are 30 days from expiring
+# This lets us know 5 days in advance that the CA cert will rotate, in which
+# We'll have 30 days to update our secret for the new CA cert
+readonly THIRTYFIVE_DAYS_IN_SECONDS=3024000
 EXPIRING=false
 
 # Fetch the CA Cert
@@ -25,10 +28,10 @@ if [[ $? -ne 0 ]]; then
 fi
 
 if [[ "$EXPIRING" == "true" ]]; then
-    MESSAGE='{"text":"ALERT: Kafka Cluster CA Cert Expiring within 10 days
+    MESSAGE='{"text":"ALERT: Kafka Cluster CA Cert Expiring within 35 days
     Cluster Name: platform-mq-'"${ENV}"'
     Expiration Date: '"${CA_CERT_EXPIRATION}"'\n
-    Alert: Kafka Cluster CA Cert expiration is approaching. The CA Cert will automatically be rotated. Services that require the CA cert for trust must be updated for the new CA Cert when available"}
+    Alert: Kafka Cluster CA Cert expiration is approaching. The CA Cert will automatically be rotated when its 30 days from expiring. Services that require the CA cert for trust must be updated for the new CA Cert when available"}
     '
     RESPONSE=$(curl -X POST -H "Content-Type: application/json" "$WEBHOOK_URL" -d $"$MESSAGE")
     if [[ $? -ne 0 ]]; then

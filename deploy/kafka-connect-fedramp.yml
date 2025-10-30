@@ -98,7 +98,7 @@ objects:
               command:
               - /bin/sh
               - -c
-              - curl -o /tmp/ca-cert-checker.sh https://raw.githubusercontent.com/project-kessel/kessel-kafka-connect/refs/heads/main/scripts/ca-cert-checker.sh && chmod +x /tmp/ca-cert-checker.sh && /tmp/ca-cert-checker.sh
+              - curl -o /tmp/ca-cert-checker.sh https://raw.githubusercontent.com/project-kessel/kessel-kafka-connect/${COMMIT_REF}/scripts/ca-cert-checker.sh && chmod +x /tmp/ca-cert-checker.sh && /tmp/ca-cert-checker.sh
               env:
               - name: WEBHOOK_URL
                 value: ${WEBHOOK_URL}
@@ -165,3 +165,6 @@ parameters:
     description: High side Google Chat Webhook URL for CA Cert Watcher alerts
   - name: ENV
     description: Environment where the service is running (int, stage, prod only)
+  - name: COMMIT_REF
+    description: Git commit ref to specify the git commit version to use for pulling down the ca-cert-checker
+    required: true
