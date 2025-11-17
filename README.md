@@ -6,6 +6,17 @@ Currently the Connect image only contains the Debezium connector for PostgreSQL,
 
 Plugins are installed using the [docker-maven-download](https://github.com/debezium/container-images/blob/main/connect-base/2.7/docker-maven-download.sh) script provided by Debezium's container-images repo and is useful for installing other plugins and libs. Review the script for more information on how to use it.
 
+# Kafka Connectors Legend
+
+Here are the current list of Kafka Connectors managed by the Fabric Kessel team which are deployed via this repo
+
+|Connector Name|Deploi File|Service Provider|Purpose|
+|--------------|-----------|----------------|-------|
+|kessel-inventory-api-connector|[kafkaconnect-w-auth.yml](./deploy/kafkaconnect-w-auth.yml)|Kessel|Used to capture all outbox events from the Inventory API DB outbox table for Relations replication|
+|hbi-migration-connector|[hbi-hosts-migration-connector.yml](./deploy/sp-connectors/hbi-hosts-migration-connector.yml)|HBI|Used to perform an initial migration from HBI's `hosts` table|
+|hbi-outbox-connector|[hbi-outbox-connector.yml](./deploy/sp-connectors/hbi-outbox-connector.yml)|HBI|Used to capture all outbox events from HBI's DB outbox table for replication|
+
+
 ### To Build Container Image:
 
 _Linux/Windows_
