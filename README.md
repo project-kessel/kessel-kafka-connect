@@ -10,7 +10,7 @@ Plugins are installed using the [docker-maven-download](https://github.com/debez
 
 Here are the current list of Kafka Connectors managed by the Fabric Kessel team which are deployed via this repo
 
-|Connector Name|Deploi File|Service Provider|Purpose|
+|Connector Name|Deploy File|Service Provider|Purpose|
 |--------------|-----------|----------------|-------|
 |kessel-inventory-api-connector|[kafkaconnect-w-auth.yml](./deploy/kafkaconnect-w-auth.yml)|Kessel|Used to capture all outbox events from the Inventory API DB outbox table for Relations replication|
 |hbi-migration-connector|[hbi-hosts-migration-connector.yml](./deploy/sp-connectors/hbi-hosts-migration-connector.yml)|HBI|Used to perform an initial migration from HBI's `hosts` table|
