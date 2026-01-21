@@ -178,5 +178,5 @@ parameters:
     value: "500m"
     description: Sets the CPU request for Kessel Kafka Connect pod
   - name: KKC_MEMORY_REQUESTS
-    value: 3Gi"
+    value: "3Gi"
     description: Sets the memory request for Kessel Kafka Connect pod
