@@ -18,6 +18,7 @@ objects:
     tasksMax: ${{MAX_TASKS}}
     config:
       snapshot.mode: initial
+      snapshot.max.threads: 2
       slot.name: debezium_hosts
       signal.enabled.channels: "source,kafka"
       signal.kafka.topic: "host-inventory.signal"
