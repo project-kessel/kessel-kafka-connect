@@ -67,3 +67,22 @@ oc process --local -f deploy/kafkaconnect-w-auth.yml \
     -p KAFKA_USER_SECRET_NAME=<Name of Kafka Secret> \
     -p KAFKA_USER_SECRET_KEY=<Key in Secret where password is defined> | oc apply -f -
 ```
+
+#### Configuring Log Levels
+
+Log levels for Kafka Connect and Debezium can be configured independently using template parameters:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `CONNECT_LOG_LEVEL` | `INFO` | Log level for Kafka Connect |
+| `DEBEZIUM_LOG_LEVEL` | `INFO` | Log level for Debezium connectors |
+
+Valid values: `INFO`, `DEBUG`, `TRACE`
+
+Example with debug logging enabled:
+```shell
+oc process --local -f deploy/kafkaconnect-no-auth.yml \
+    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> \
+    -p CONNECT_LOG_LEVEL=DEBUG \
+    -p DEBEZIUM_LOG_LEVEL=INFO | oc apply -f -
+```
