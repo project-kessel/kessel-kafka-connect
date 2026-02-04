@@ -45,6 +45,12 @@ objects:
       pod:
         imagePullSecrets:
         - name: quay-cloudservices-pull
+    logging:
+      type: inline
+      loggers:
+        connect.root.logger.level: ${CONNECT_LOG_LEVEL}
+        log4j.logger.io.debezium: ${DEBEZIUM_LOG_LEVEL}
+        log4j.logger.org.apache.kafka.connect: ${CONNECT_LOG_LEVEL}
     version: ${VERSION}
 
 - apiVersion: kafka.strimzi.io/v1beta2
@@ -138,3 +144,9 @@ parameters:
   - name: KKC_MEMORY_REQUESTS
     value: "4Gi"
     description: Sets the memory request for Kessel Kafka Connect pod
+  - name: CONNECT_LOG_LEVEL
+    value: "INFO"
+    description: Log level for Kafka Connect (INFO, DEBUG, TRACE)
+  - name: DEBEZIUM_LOG_LEVEL
+    value: "INFO"
+    description: Log level for Debezium connectors (INFO, DEBUG, TRACE)
