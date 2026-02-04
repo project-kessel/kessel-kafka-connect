@@ -211,6 +211,12 @@ objects:
       pod:
         imagePullSecrets:
         - name: quay-cloudservices-pull
+    logging:
+      type: inline
+      loggers:
+        connect.root.logger.level: ${CONNECT_LOG_LEVEL}
+        log4j.logger.io.debezium: ${DEBEZIUM_LOG_LEVEL}
+        log4j.logger.org.apache.kafka.connect: ${CONNECT_LOG_LEVEL}
     version: ${VERSION}
 parameters:
   - name: BOOTSTRAP_SERVERS
@@ -237,3 +243,9 @@ parameters:
   - name: VERSION
     description: Kafka Connect version to use (should match the Kafka version of cluster and connect base image)
     value: "3.9.0"
+  - name: CONNECT_LOG_LEVEL
+    value: "INFO"
+    description: Log level for Kafka Connect (INFO, DEBUG, TRACE)
+  - name: DEBEZIUM_LOG_LEVEL
+    value: "INFO"
+    description: Log level for Debezium connectors (INFO, DEBUG, TRACE)
