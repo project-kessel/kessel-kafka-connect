@@ -3,6 +3,23 @@ kind: Template
 metadata:
   name: kafka-connect-template
 objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: kessel-kafka-connect-log4j
+  data:
+    log4j.properties: |
+      log4j.rootLogger=${CONNECT_LOG_LEVEL}, stdout
+
+      log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+      log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+      log4j.appender.stdout.layout.ConversionPattern=%d{ISO8601} %-5p [%X{dbz.connectorType}|%X{dbz.connectorContext}] %X{connector.context} %m [%c]%n
+
+      log4j.logger.org.apache.kafka.connect=${CONNECT_LOG_LEVEL}
+      log4j.logger.org.apache.kafka.clients=${CONNECT_LOG_LEVEL}
+      log4j.logger.io.debezium=${DEBEZIUM_LOG_LEVEL}
+      log4j.logger.org.reflections=ERROR
+
 - apiVersion: kafka.strimzi.io/v1beta2
   kind: KafkaConnect
   metadata:
@@ -45,12 +62,17 @@ objects:
       pod:
         imagePullSecrets:
         - name: quay-cloudservices-pull
-    logging:
-      type: inline
-      loggers:
-        connect.root.logger.level: ${CONNECT_LOG_LEVEL}
-        log4j.logger.io.debezium: ${DEBEZIUM_LOG_LEVEL}
-        log4j.logger.org.apache.kafka.connect: ${CONNECT_LOG_LEVEL}
+        volumes:
+        - name: log4j-config
+          configMap:
+            name: kessel-kafka-connect-log4j
+      connectContainer:
+        env:
+        - name: KAFKA_LOG4J_OPTS
+          value: "-Dlog4j.configuration=file:/mnt/log4j/log4j.properties"
+        volumeMounts:
+        - name: log4j-config
+          mountPath: /mnt/log4j
     version: ${VERSION}
 
 - apiVersion: kafka.strimzi.io/v1beta2
