@@ -86,3 +86,26 @@ oc process --local -f deploy/kafkaconnect-no-auth.yml \
     -p CONNECT_LOG_LEVEL=DEBUG \
     -p DEBEZIUM_LOG_LEVEL=INFO | oc apply -f -
 ```
+
+#### Log Format with MDC
+
+Logs include [Debezium MDC](https://debezium.io/documentation/reference/stable/operations/logging.html#adding-mapped-diagnostic-contexts) and Kafka Connect context for easier filtering:
+
+```
+2026-02-05 15:00:18,237 INFO  [Postgres|streaming] [kessel-inventory-source-connector|task-0] Processing messages [io.debezium...]
+```
+
+**Format:** `[connectorType|activity] [connectorName|taskId] message [loggerClass]`
+
+**Filtering examples:**
+```shell
+# Filter by connector type
+oc logs <pod> | grep "\[Postgres|"
+
+# Filter by connector name
+oc logs <pod> | grep "kessel-inventory-source-connector"
+
+# Filter by activity (snapshot, streaming)
+oc logs <pod> | grep "|streaming\]"
+oc logs <pod> | grep "|snapshot\]"
+```
