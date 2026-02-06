@@ -1,4 +1,3 @@
-# debezium v2.7
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
@@ -30,6 +29,8 @@ objects:
       database.port: ${secrets:${DB_SECRET_NAME}:db.port}
       database.user: ${secrets:${DB_SECRET_NAME}:db.user}
       database.password: ${secrets:${DB_SECRET_NAME}:db.password}
+      database.sslmode: ${SSL_MODE}
+      snapshot.fetch.size: 10000
       topic.prefix: host-inventory
       table.include.list: hbi.hosts_p.*
       plugin.name: pgoutput
@@ -82,4 +83,6 @@ parameters:
 - name: DEBEZIUM_HEARTBEAT_INTERVAL_MS
   value: "300000"
   description: The interval for the Debezium heartbeat in ms
-
+- name: SSL_MODE
+  value: prefer
+  description: sets the SSL mode to use when connector to database
