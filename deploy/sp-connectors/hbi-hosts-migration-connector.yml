@@ -16,7 +16,7 @@ objects:
     class: io.debezium.connector.postgresql.PostgresConnector
     tasksMax: ${{MAX_TASKS}}
     config:
-      snapshot.mode: always
+      snapshot.mode: ${SNAPSHOT_MODE}
       snapshot.max.threads: 2
       slot.name: debezium_hosts
       signal.enabled.channels: "source,kafka"
@@ -85,4 +85,7 @@ parameters:
   description: The interval for the Debezium heartbeat in ms
 - name: SSL_MODE
   value: prefer
-  description: sets the SSL mode to use when connector to database
+  description: sets the SSL mode to use when connecting to database
+- name: SNAPSHOT_MODE
+  value: initial
+  description: sets the snapshot mode to use when connecting to database
