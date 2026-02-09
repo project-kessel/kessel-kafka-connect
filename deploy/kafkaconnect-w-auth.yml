@@ -73,6 +73,8 @@ objects:
         volumeMounts:
         - name: log4j-config
           mountPath: /mnt/log4j
+      podDisruptionBudget:
+        maxUnavailable: 2
     version: ${VERSION}
 
 - apiVersion: kafka.strimzi.io/v1beta2
@@ -129,7 +131,7 @@ parameters:
     description: Image tag for the connect image
   - name: CONNECT_REPLICAS
     description: Number of replicas in the connect cluster
-    value: "1"
+    value: "3"
   - name: VERSION
     description: Kafka Connect version to use (should match the Kafka version of cluster and connect base image)
     value: "3.9.0"
