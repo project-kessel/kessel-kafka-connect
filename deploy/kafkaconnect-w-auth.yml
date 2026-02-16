@@ -154,16 +154,16 @@ parameters:
     value: "250"
     description: The interval for the Debezium batch processing
   - name: KKC_CPU_LIMIT
-    value: "3000m"
+    value: "1000m"
     description: Sets the CPU limit for Kessel Kafka Connect pod
   - name: KKC_MEMORY_LIMIT
-    value: "8Gi"
+    value: "4Gi"
     description: Sets the memory limit for Kessel Kafka Connect pod
   - name: KKC_CPU_REQUESTS
-    value: "1000m"
+    value: "500m"
     description: Sets the CPU request for Kessel Kafka Connect pod
   - name: KKC_MEMORY_REQUESTS
-    value: "4Gi"
+    value: "2Gi"
     description: Sets the memory request for Kessel Kafka Connect pod
   - name: CONNECT_LOG_LEVEL
     value: "INFO"
