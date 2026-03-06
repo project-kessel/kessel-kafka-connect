@@ -9,6 +9,8 @@ objects:
     name: hbi-outbox-connector
     labels:
       strimzi.io/cluster: ${KAFKA_CONNECT_INSTANCE}
+    annotations:
+      ${KCTR_ANNOTATION_KEY}: ${KCTR_ANNOTATION_VAL}
   spec:
     state: ${CONNECTOR_STATE}
     class: io.debezium.connector.postgresql.PostgresConnector
@@ -57,3 +59,9 @@ parameters:
 - name: DEBEZIUM_POLL_INTERVAL_MS
   value: "250"
   description: The interval for the Debezium batch processing
+- name: KCTR_ANNOTATION_KEY
+  description: Allows setting a single annotation key for connector management, such as restarting a task. Defaults to an ignored value
+  value: "kessel/no-op"
+- name: KCTR_ANNOTATION_VAL
+  description: Allows setting a single annotation value for connector management, such as restarting a task. Defaults to an ignored value
+  value: ""
