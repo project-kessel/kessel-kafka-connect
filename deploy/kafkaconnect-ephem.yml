@@ -171,8 +171,41 @@ objects:
       - pattern: kafka.connect<type=connect-coordinator-metrics><>(assigned-connectors|assigned-tasks)
         name: kafka_connect_coordinator_$1
         help: "Kafka Connect JMX metric assignment information"
-      type: GAUGE
-
+        type: GAUGE
+      - pattern : "kafka.connect<type=connect-worker-metrics>([^:]+):"
+        name: "kafka_connect_worker_metrics_$1"
+      - pattern : "kafka.connect<type=connect-metrics, client-id=([^:]+)><>([^:]+)"
+        name: "kafka_connect_metrics_$2"
+        labels:
+          client: "$1"
+      - pattern: "debezium.([^:]+)<type=connector-metrics, context=([^,]+), server=([^,]+), key=([^>]+)><>RowsScanned"
+        name: "debezium_metrics_RowsScanned"
+        labels:
+          plugin: "$1"
+          name: "$3"
+          context: "$2"
+          table: "$4"
+      - pattern: "debezium.([^:]+)<type=connector-metrics, server=([^,]+), task=([^,]+), context=([^,]+), database=([^>]+)>([^:]+)"
+        name: "debezium_metrics_$6"
+        labels:
+          plugin: "$1"
+          name: "$2"
+          task: "$3"
+          context: "$4"
+          database: "$5"
+      - pattern: "debezium.([^:]+)<type=connector-metrics, server=([^,]+), task=([^,]+), context=([^>]+)>([^:]+)"
+        name: "debezium_metrics_$5"
+        labels:
+          plugin: "$1"
+          name: "$2"
+          task: "$3"
+          context: "$4"
+      - pattern: "debezium.([^:]+)<type=connector-metrics, context=([^,]+), server=([^>]+)>([^:]+)"
+        name: "debezium_metrics_$4"
+        labels:
+          plugin: "$1"
+          name: "$3"
+          context: "$2"
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -189,7 +222,6 @@ objects:
       log4j.logger.org.apache.kafka.clients=${CONNECT_LOG_LEVEL}
       log4j.logger.io.debezium=${DEBEZIUM_LOG_LEVEL}
       log4j.logger.org.reflections=ERROR
-
 - apiVersion: kafka.strimzi.io/v1beta2
   kind: KafkaConnect
   metadata:
@@ -197,7 +229,7 @@ objects:
       strimzi.io/use-connector-resources: "true"
     name: kessel-kafka-connect
   spec:
-    bootstrapServers: ${BOOTSTRAP_SERVERS}
+    bootstrapServers: ${ENV_NAME}-kafka-bootstrap:9092
     metricsConfig:
       type: jmxPrometheusExporter
       valueFrom:
@@ -205,17 +237,17 @@ objects:
           key: metrics-config.yml
           name: kessel-kafka-connect-metrics
     config:
+      group.id: kessel-kafka-connect-cluster
       config.storage.replication.factor: ${CONFIG_STORAGE_REPLICATION_FACTOR}
       config.storage.topic: kessel-kafka-connect-cluster-configs
       connector.client.config.override.policy: All
-      group.id: kessel-kafka-connect-cluster
       offset.storage.replication.factor: ${OFFSET_STORAGE_REPLICATION_FACTOR}
       offset.storage.topic: kessel-kafka-connect-cluster-offsets
       status.storage.replication.factor: ${STATUS_STORAGE_REPLICATION_FACTOR}
       status.storage.topic: kessel-kafka-connect-cluster-status
       config.providers: secrets
       config.providers.secrets.class: io.strimzi.kafka.KubernetesSecretConfigProvider
-    image: ${KAFKA_CONNECT_IMAGE}
+    image: ${KAFKA_CONNECT_IMAGE}:${IMAGE_TAG}
     replicas: ${{CONNECT_REPLICAS}}
     resources:
       limits:
@@ -239,10 +271,79 @@ objects:
         volumeMounts:
         - name: log4j-config
           mountPath: /mnt/log4j
+      podDisruptionBudget:
+        maxUnavailable: 2
     version: ${VERSION}
+- apiVersion: kafka.strimzi.io/v1beta2
+  kind: KafkaConnector
+  metadata:
+    name: kessel-inventory-source-connector
+    labels:
+      strimzi.io/cluster: kessel-kafka-connect
+    annotations:
+      ${KCTR_ANNOTATION_KEY}: ${KCTR_ANNOTATION_VAL}
+  spec:
+    class: io.debezium.connector.postgresql.PostgresConnector
+    tasksMax: 1 # source connector only supports 1 task
+    config:
+      slot.name: inventory_api_debezium
+      snapshot.mode: no_data
+      database.server.name: kessel-inventory-db
+      database.dbname: ${secrets:kessel-inventory-db:db.name}
+      database.hostname: ${secrets:kessel-inventory-db:db.host}
+      database.port: ${secrets:kessel-inventory-db:db.port}
+      database.user: ${secrets:kessel-inventory-db:db.user}
+      database.password: ${secrets:kessel-inventory-db:db.password}
+      topic.prefix: kessel-inventory
+      table.exclude.list: ".*"
+      message.prefix.include.list: "kessel.tuples,kessel.resources"
+      transforms: "decode,outbox"
+      transforms.decode.type: io.debezium.connector.postgresql.transforms.DecodeLogicalDecodingMessageContent
+      transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+      transforms.outbox.table.fields.additional.placement: operation:header, txid:header
+      transforms.outbox.table.expand.json.payload: true
+      value.converter: org.apache.kafka.connect.json.JsonConverter
+      plugin.name: pgoutput
+      heartbeat.interval.ms: ${DEBEZIUM_HEARTBEAT_INTERVAL_MS}
+      heartbeat.action.query: ${DEBEZIUM_ACTION_QUERY}
+      topic.heartbeat.prefix: ${TOPIC_HEARTBEAT_PREFIX}
+      poll.interval.ms: ${DEBEZIUM_POLL_INTERVAL_MS}
+### SP Outbox Connectors
+- apiVersion: kafka.strimzi.io/v1beta2
+  kind: KafkaConnector
+  metadata:
+    name: hbi-outbox-connector
+    labels:
+      strimzi.io/cluster: kessel-kafka-connect
+  spec:
+    state: running
+    class: io.debezium.connector.postgresql.PostgresConnector
+    tasksMax: 1 # source connector only supports 1 task
+    config:
+      slot.name: debezium_outbox
+      snapshot.mode: "no_data"
+      database.server.name: host-inventory-db
+      database.dbname: ${secrets:${HBI_DB_SECRET_NAME}:db.name}
+      database.hostname: ${secrets:${HBI_DB_SECRET_NAME}:db.host}
+      database.port: ${secrets:${HBI_DB_SECRET_NAME}:db.port}
+      database.user: ${secrets:${HBI_DB_SECRET_NAME}:db.user}
+      database.password: ${secrets:${HBI_DB_SECRET_NAME}:db.password}
+      topic.prefix: host-inventory
+      table.whitelist: hbi.outbox
+      table.include.list: hbi.outbox
+      transforms: outbox
+      transforms.outbox.type: io.debezium.transforms.outbox.EventRouter
+      transforms.outbox.table.fields.additional.placement: operation:header,version:header
+      transforms.outbox.table.expand.json.payload: true
+      value.converter: org.apache.kafka.connect.json.JsonConverter
+      plugin.name: pgoutput
+      heartbeat.interval.ms: ${DEBEZIUM_HEARTBEAT_INTERVAL_MS}
+      heartbeat.action.query: ${DEBEZIUM_ACTION_QUERY}
+      topic.heartbeat.prefix: ${TOPIC_HEARTBEAT_PREFIX}
+      poll.interval.ms: ${DEBEZIUM_POLL_INTERVAL_MS}
 parameters:
-  - name: BOOTSTRAP_SERVERS
-    description: List of bootstrap servers (comma-separated list in 'hostname:port' notation)
+  - description: ClowdEnvironment name (ephemeral, stage, prod)
+    name: ENV_NAME
     required: true
   - name: CONFIG_STORAGE_REPLICATION_FACTOR
     description: Replication factor for the topic where connector configurations are stored
@@ -256,12 +357,22 @@ parameters:
   - name: KAFKA_CONNECT_IMAGE
     value: quay.io/redhat-services-prod/project-kessel-tenant/kessel-kafka-connect
     description: Container image name for the connect cluster pods
+  - name: IMAGE_TAG
+    required: true
+    value: latest
+    description: Image tag for the connect image
   - name: CONNECT_REPLICAS
     description: Number of replicas in the connect cluster
     value: "1"
   - name: VERSION
     description: Kafka Connect version to use (should match the Kafka version of cluster and connect base image)
     value: "3.9.0"
+  - name: KCTR_ANNOTATION_KEY
+    description: Allows setting a single annotation key for connector management, such as restarting a task. Defaults to an ignored value
+    value: "kessel/no-op"
+  - name: KCTR_ANNOTATION_VAL
+    description: Allows setting a single annotation value for connector management, such as restarting a task. Defaults to an ignored value
+    value: ""
   - name: KKC_CPU_LIMIT
     value: "1000m"
     description: Sets the CPU limit for Kessel Kafka Connect pod
@@ -280,3 +391,18 @@ parameters:
   - name: DEBEZIUM_LOG_LEVEL
     value: "INFO"
     description: Log level for Debezium connectors (INFO, DEBUG, TRACE)
+  - name: HBI_DB_SECRET_NAME
+    description: Name of the secret that contains database credentials
+    value: host-inventory-db
+  - name: TOPIC_HEARTBEAT_PREFIX
+    value: debezium-heartbeat
+    description: Prefix for the connector heartbeat topic
+  - name: DEBEZIUM_ACTION_QUERY
+    value: "SELECT pg_logical_emit_message(false, 'heartbeat', now()::varchar);"
+    description: Query action that runs for each heartbeat event
+  - name: DEBEZIUM_HEARTBEAT_INTERVAL_MS
+    value: "300000"
+    description: The interval for the Debezium heartbeat in ms
+  - name: DEBEZIUM_POLL_INTERVAL_MS
+    value: "250"
+    description: The interval for the Debezium batch processing

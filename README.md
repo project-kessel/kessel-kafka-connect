@@ -34,39 +34,22 @@ make build-push-minimal
 ```
 
 ### Kafka Connect Deployment
+
 The KafkaConnect CR templates can be used to deploy a Kafka Connect cluster using the image built with the provided Dockerfile. There are 3 versions of the KafkaConnect CR: one with authentication, one without, and one for FedRAMP
 
-The `kafkaconnect-no-auth.yml` template is useful for Ephemeral testing, where the Clowder-provided Kafka cluster can be used for the Connect cluster and does not require any authentication. In ephemeral, by default Kessel Inventory API ships with Kessel Kafka Connect and can be deployed that way.
+The `kafkaconnect-ephem.yml` template is used for Ephemeral testing and can be deployed via bonfire. Note, the Clowder-provided Kafka cluster is used for the Connect cluster and does not require any authentication. The deployment also includes the Kessel Inventory outbox connector, and HBI outbox connector to simplify test deployments for service providers as well as the Mgmt Fabric teams.
 
-The `kafkaconnect-w-auth.yml` template is used for Stage/Prod and relies on AWS MSK. It is configured with SASL/SCRAM and requires credentials to authenticate to the cluster. In order to authenticate, you will need a Kakfa user configured for the MSK cluster. See the **Managed Streaming for Apache Kafka (MSK) via App-Interface** section of the App Interface docs on how to add users. Note, the Inventory API Debezium Connector is also deployed as part of this manifest
+```shell
+bonfire deploy kessel -C kessel-kafka-connect
+
+# Kessel Inventory also lists KKC as a dependency and can be deployed automatically while deploying Inventory API
+bonfire deploy kessel -C kessel-inventory
+```
+
+The `kafkaconnect-w-auth.yml` template is used for Stage/Prod and relies on AWS MSK. It is configured with SASL/SCRAM and requires credentials to authenticate to the cluster. In order to authenticate, you will need a Kakfa user configured for the MSK cluster. See the **Managed Streaming for Apache Kafka (MSK) via App-Interface** section of the App Interface docs on how to add users.
 
 The final template, `kafka-connect-fedramp.yml`, is similar to the `kafkaconnect-w-auth.yml` deploy file but is designed for FedRAMP and leveraging a Strimzi Kafka cluster vs MSK.
 
-#### Using the Templates
-
-To use the templates in your existing deployment template, copy the contents of the template to your existing template, and add the parameters to your existing parameter section in your deploy templates
-
-To use the templates directly:
-
-**Without Auth**
-```shell
-oc process --local -f deploy/kafkaconnect-no-auth.yml \
-    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> | oc apply -f -
-```
-
-> [!NOTE]
-> Any parameters defined in the template can be overwritten with `-p PARAM=VALUE` if desired.
->
-> Ephemeral Kafka clusters are not configured with Auth enabled, testing auth in Ephemeral would require a separate Kafka cluster.
-
-**With Auth**
-```shell
-oc process --local -f deploy/kafkaconnect-w-auth.yml \
-    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> \
-    -p KAFKA_USERNAME=<Kafka Username> \
-    -p KAFKA_USER_SECRET_NAME=<Name of Kafka Secret> \
-    -p KAFKA_USER_SECRET_KEY=<Key in Secret where password is defined> | oc apply -f -
-```
 
 #### Configuring Log Levels
 
@@ -78,14 +61,6 @@ Log levels for Kafka Connect and Debezium can be configured independently using 
 | `DEBEZIUM_LOG_LEVEL` | `INFO` | Log level for Debezium connectors |
 
 Valid values: `INFO`, `DEBUG`, `TRACE`
-
-Example with debug logging enabled:
-```shell
-oc process --local -f deploy/kafkaconnect-no-auth.yml \
-    -p BOOTSTRAP_SERVERS=<Bootstrap Server Address> \
-    -p CONNECT_LOG_LEVEL=DEBUG \
-    -p DEBEZIUM_LOG_LEVEL=INFO | oc apply -f -
-```
 
 #### Log Format with MDC
 
