@@ -2,7 +2,7 @@
 
 A dedicated Kafka Connect image to be leveraged with Streams for Apache Kafka
 
-Currently the Connect image only contains the Debezium connector for PostgreSQL, any other connectors or plugins/libs required would need to be added in the future.
+Currently the Connect image only contains the Debezium connector for PostgreSQL, any other connectors or plugins required would need to be added in the future.
 
 Plugins are installed using the [docker-maven-download](https://github.com/debezium/container-images/blob/main/connect-base/2.7/docker-maven-download.sh) script provided by Debezium's container-images repo and is useful for installing other plugins and libs. Review the script for more information on how to use it.
 
