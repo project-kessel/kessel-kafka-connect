@@ -3,6 +3,12 @@ kind: Template
 metadata:
   name: kafka-connect-template
 objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdAppRef
+  metadata:
+    name: kessel-kafkaconnect
+  spec:
+    envName: ${ENV_NAME}
 - apiVersion: v1
   kind: ConfigMap
   metadata:
