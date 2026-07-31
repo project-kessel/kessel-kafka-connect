@@ -4,7 +4,7 @@ A dedicated Kafka Connect image to be leveraged with Streams for Apache Kafka
 
 Currently the Connect image only contains the Debezium connector for PostgreSQL, any other connectors or plugins required would need to be added in the future.
 
-Plugins are installed using the [docker-maven-download](https://github.com/debezium/container-images/blob/main/connect-base/2.7/docker-maven-download.sh) script provided by Debezium's container-images repo and is useful for installing other plugins and libs. Review the script for more information on how to use it.
+Plugins are downloaded directly from Maven Central during the image build and verified against SHA-256 digests pinned in the `Dockerfile`. To add connectors or upgrade versions, update `DEBEZIUM_MAVEN_VERSION` and the corresponding digests in the `Dockerfile`.
 
 # Kafka Connectors Legend
 
@@ -19,23 +19,19 @@ Here are the current list of Kafka Connectors managed by the Fabric Kessel team 
 
 ### To Build Container Image:
 
-_Linux/Windows_
-```shell
-export IMAGE=your-quay-repo
-make docker-build-push
-```
-
-_MacOS_
+Log in to quay.io first, then run the `docker-build-push` target with your image destination. The target will error with the appropriate `login` command if authentication is missing.
 
 ```shell
-export QUAY_REPO_INVENTORY=your-quay-repo # required
-podman login quay.io # required, this target assumes you are already logged in
-make build-push-minimal
+podman login quay.io   # or: docker login quay.io
+
+make docker-build-push IMAGE=quay.io/<your-org>/kessel-kafka-connect
 ```
+
+`podman` is used automatically if available, otherwise `docker` is used. Override with `DOCKER=docker make docker-build-push IMAGE=...`.
 
 ### Kafka Connect Deployment
 
-The KafkaConnect CR templates can be used to deploy a Kafka Connect cluster using the image built with the provided Dockerfile. There are 3 versions of the KafkaConnect CR: one with authentication, one without, and one for FedRAMP
+The KafkaConnect CR templates can be used to deploy a Kafka Connect cluster using the image built with the provided Dockerfile. There are 2 versions of the KafkaConnect CR: one with authentication, one without.
 
 The `kafkaconnect-ephem.yml` template is used for Ephemeral testing and can be deployed via bonfire. Note, the Clowder-provided Kafka cluster is used for the Connect cluster and does not require any authentication. The deployment also includes the Kessel Inventory outbox connector, and HBI outbox connector to simplify test deployments for service providers as well as the Mgmt Fabric teams.
 
@@ -47,8 +43,6 @@ bonfire deploy kessel -C kessel-inventory
 ```
 
 The `kafkaconnect-w-auth.yml` template is used for Stage/Prod and relies on AWS MSK. It is configured with SASL/SCRAM and requires credentials to authenticate to the cluster. In order to authenticate, you will need a Kakfa user configured for the MSK cluster. See the **Managed Streaming for Apache Kafka (MSK) via App-Interface** section of the App Interface docs on how to add users.
-
-The final template, `kafka-connect-fedramp.yml`, is similar to the `kafkaconnect-w-auth.yml` deploy file but is designed for FedRAMP and leveraging a Strimzi Kafka cluster vs MSK.
 
 
 #### Configuring Log Levels
