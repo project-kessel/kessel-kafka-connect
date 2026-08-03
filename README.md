@@ -19,15 +19,18 @@ Here are the current list of Kafka Connectors managed by the Fabric Kessel team 
 
 ### To Build Container Image:
 
-Log in to quay.io first, then run the `docker-build-push` target with your image destination. The target will error with the appropriate `login` command if authentication is missing.
+Log in to the required registries, then run the `docker-build-push` target with your image destination. The base image is pulled from `registry.redhat.io` during the build, so both logins are required.
 
 ```shell
-podman login quay.io   # or: docker login quay.io
+podman login quay.io              # or: docker login quay.io
+podman login registry.redhat.io   # or: docker login registry.redhat.io
 
-make docker-build-push IMAGE=quay.io/<your-org>/kessel-kafka-connect
+make docker-build-push IMAGE=quay.io/your-org/kessel-kafka-connect
 ```
 
-`podman` is used automatically if available, otherwise `docker` is used. Override with `DOCKER=docker make docker-build-push IMAGE=...`.
+If the build fails with an authentication error mentioning `registry.redhat.io`, ensure you are logged in using your Red Hat Customer Portal credentials. See the [Red Hat Registry Authentication guide](https://access.redhat.com/RegistryAuthentication) for details.
+
+`podman` is used automatically if available, otherwise `docker` is used. Override with `DOCKER=docker make docker-build-push IMAGE=quay.io/your-org/kessel-kafka-connect`.
 
 ### Kafka Connect Deployment
 

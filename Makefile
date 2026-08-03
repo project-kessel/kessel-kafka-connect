@@ -18,11 +18,13 @@ endif
 
 .PHONY: docker-build-push
 docker-build-push: ## Build and push the container image; IMAGE and quay.io login are required
+	@[ -n "$(DOCKER)" ] || { echo "Error: neither podman nor docker found. Please install one to continue."; exit 1; }
 	@[ -n "$(IMAGE)" ] || { echo "IMAGE is required. Example: make docker-build-push IMAGE=quay.io/youruser/kessel-kafka-connect"; exit 1; }
-	@$(DOCKER) build $(PLATFORM_FLAGS) --build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(IMAGE):$(IMAGE_TAG) -f ./Dockerfile . || \
+	@printf '%s\n' "$(IMAGE)" | grep -qE '^[a-zA-Z0-9][a-zA-Z0-9._/:@-]*$$' || { echo "IMAGE contains invalid characters. Use format: quay.io/your-org/image-name"; exit 1; }
+	@"$(DOCKER)" build $(PLATFORM_FLAGS) --build-arg GIT_COMMIT="$(GIT_COMMIT)" -t "$(IMAGE):$(IMAGE_TAG)" -f ./Dockerfile . || \
 		{ echo "Build failed. If due to authentication, check your registry credentials and try again."; exit 1; }
-	@$(DOCKER) push $(IMAGE):$(IMAGE_TAG) || \
+	@"$(DOCKER)" push "$(IMAGE):$(IMAGE_TAG)" || \
 		{ echo "Push failed. If due to authentication, run: $(DOCKER) login quay.io"; exit 1; }
-	@$(DOCKER) tag $(IMAGE):$(IMAGE_TAG) $(IMAGE):latest
-	@$(DOCKER) push $(IMAGE):latest || \
+	@"$(DOCKER)" tag "$(IMAGE):$(IMAGE_TAG)" "$(IMAGE):latest"
+	@"$(DOCKER)" push "$(IMAGE):latest" || \
 		{ echo "Push failed. If due to authentication, run: $(DOCKER) login quay.io"; exit 1; }
