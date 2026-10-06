@@ -1,5 +1,7 @@
 # Kessel Kafka Connect
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/project-kessel/kessel-kafka-connect/badge)](https://securityscorecards.dev/viewer/?uri=github.com/project-kessel/kessel-kafka-connect)
+
 A dedicated Kafka Connect image to be leveraged with Streams for Apache Kafka
 
 Currently the Connect image only contains the Debezium connector for PostgreSQL, any other connectors or plugins required would need to be added in the future.
