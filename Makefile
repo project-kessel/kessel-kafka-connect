@@ -28,3 +28,11 @@ docker-build-push: ## Build and push the container image; IMAGE and quay.io logi
 	@"$(DOCKER)" tag "$(IMAGE):$(IMAGE_TAG)" "$(IMAGE):latest"
 	@"$(DOCKER)" push "$(IMAGE):latest" || \
 		{ echo "Push failed. If due to authentication, run: $(DOCKER) login quay.io"; exit 1; }
+
+.PHONY: test
+test: ## Run verification and integrity tests (no container runtime required)
+	@bash scripts/test-verify-checksum.sh
+
+.PHONY: generate-checksums
+generate-checksums: ## Compute SHA-256 checksums for pinned Debezium artifacts (requires network)
+	@bash scripts/generate-checksums.sh $(VERSION)
