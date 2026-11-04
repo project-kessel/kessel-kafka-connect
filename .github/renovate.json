@@ -9,6 +9,12 @@
         "branchTopic": "dependency-updates",
         "commitMessageTopic": "dependencies"
       }
+    },
+    {
+      "description": "Streams 3.x images require the Streams 3.0 operator. Stay on the 2.x line until that upgrade.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["registry.redhat.io/amq-streams/kafka-39-rhel9"],
+      "allowedVersions": "/^2\\./"
     }
   ]
 }
