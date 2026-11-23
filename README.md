@@ -10,12 +10,16 @@ The image builds hermetically: the build itself has no network access. The Debez
 
 ### Upgrading Debezium
 
-```shell
-make bump-debezium DEBEZIUM_VERSION=3.2.0.Final   # downloads both artifacts and rewrites artifacts.lock.yaml
-make test                                         # checks the lockfile, Dockerfile, and .tekton pipelines agree
-```
+1. Set the new `version` on both entries in `artifacts.lock.yaml`.
+2. Print the new checksums and paste them into the matching entries:
 
-Commit the updated `artifacts.lock.yaml`. To add another connector, add its entry to `scripts/bump-debezium.sh` (which generates the lockfile) and a matching `tar` step in the `Dockerfile`.
+   ```shell
+   make generate-checksums DEBEZIUM_VERSION=3.2.0.Final
+   ```
+
+3. Commit the updated `artifacts.lock.yaml`. The Konflux PR build fails if a checksum is wrong.
+
+To add another connector or library, add an entry to `artifacts.lock.yaml` and a matching `tar` step in the `Dockerfile`.
 
 # Kafka Connectors Legend
 

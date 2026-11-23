@@ -12,8 +12,9 @@ else
 PLATFORM_FLAGS :=
 endif
 
-# Same Hermeto release the Konflux prefetch-dependencies task uses. The image is
-# published for linux/amd64 only.
+# Hermeto runs the same prefetch locally that Konflux runs in CI. Konflux updates
+# its own Hermeto version independently, so this pin can lag behind; bump it
+# when convenient. The image is published for linux/amd64 only.
 HERMETO_IMAGE := quay.io/konflux-ci/hermeto:0.64.0@sha256:3c7a8622981aec970c159e608500d75a01e6bb42564ec25a92369e178b6ace8f
 HERMETO_OUTPUT := $(CURDIR)/hermeto-output
 
@@ -42,11 +43,7 @@ docker-build-push: check-build-env prefetch ## Build (network-isolated, like Kon
 	@"$(DOCKER)" push "$(IMAGE):latest" || \
 		{ echo "Push failed. If due to authentication, run: $(DOCKER) login quay.io"; exit 1; }
 
-.PHONY: test
-test: ## Run lockfile and hermetic-build consistency tests (no network or container runtime required)
-	@bash scripts/test-artifacts-lock.sh
-
-.PHONY: bump-debezium
-bump-debezium: ## Pin a new Debezium version in artifacts.lock.yaml; DEBEZIUM_VERSION is required (requires network)
-	@[ -n "$(DEBEZIUM_VERSION)" ] || { echo "DEBEZIUM_VERSION is required. Example: make bump-debezium DEBEZIUM_VERSION=3.1.3.Final"; exit 1; }
-	@bash scripts/bump-debezium.sh "$(DEBEZIUM_VERSION)"
+.PHONY: generate-checksums
+generate-checksums: ## Print SHA-256 checksums for a Debezium version to paste into artifacts.lock.yaml; DEBEZIUM_VERSION is required (requires network)
+	@[ -n "$(DEBEZIUM_VERSION)" ] || { echo "DEBEZIUM_VERSION is required. Example: make generate-checksums DEBEZIUM_VERSION=3.1.3.Final"; exit 1; }
+	@bash scripts/generate-checksums.sh "$(DEBEZIUM_VERSION)"

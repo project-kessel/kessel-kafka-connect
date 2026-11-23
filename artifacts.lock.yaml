@@ -2,10 +2,11 @@
 #
 # Konflux prefetches these with Hermeto (generic package manager) before the
 # network-isolated build, verifies each checksum, and records them in the SBOM.
-# The Dockerfile reads them from /cachi2/output/deps/generic/<filename>.
+# The Dockerfile reads them from /cachi2/output/deps/generic/<filename>, so keep
+# each `filename` in sync with the Dockerfile.
 #
-# Do not edit by hand. To change the Debezium version run:
-#   make bump-debezium DEBEZIUM_VERSION=<x.y.z.Final>
+# To bump Debezium, set the new `version` on both entries and update the
+# checksums from: make generate-checksums DEBEZIUM_VERSION=<x.y.z.Final>
 metadata:
   version: "1.0"
 artifacts:
