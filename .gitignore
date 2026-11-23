@@ -3,3 +3,5 @@ deploy-debezium.yml
 venv/
 .idea
 .claude
+# local Hermeto prefetch output (make prefetch)
+hermeto-output/

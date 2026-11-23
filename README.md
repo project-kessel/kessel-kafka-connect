@@ -6,7 +6,20 @@ A dedicated Kafka Connect image to be leveraged with Streams for Apache Kafka
 
 Currently the Connect image only contains the Debezium connector for PostgreSQL, any other connectors or plugins required would need to be added in the future.
 
-Plugins are downloaded directly from Maven Central during the image build and verified against SHA-256 digests pinned in the `Dockerfile`. To add connectors or upgrade versions, update `DEBEZIUM_MAVEN_VERSION` and the corresponding digests in the `Dockerfile`.
+The image builds hermetically: the build itself has no network access. The Debezium artifacts are pinned with SHA-256 checksums in [`artifacts.lock.yaml`](./artifacts.lock.yaml). Before the build, Konflux prefetches them with [Hermeto](https://github.com/hermetoproject/hermeto), verifies the checksums, and records them in the image SBOM. The `Dockerfile` extracts them from the prefetched directory.
+
+### Upgrading Debezium
+
+1. Set the new `version` on both entries in `artifacts.lock.yaml`.
+2. Print the new checksums and paste them into the matching entries:
+
+   ```shell
+   make generate-checksums DEBEZIUM_VERSION=3.2.0.Final
+   ```
+
+3. Commit the updated `artifacts.lock.yaml`. The Konflux PR build fails if a checksum is wrong.
+
+To add another connector or library, add an entry to `artifacts.lock.yaml` and a matching `tar` step in the `Dockerfile`.
 
 # Kafka Connectors Legend
 
@@ -32,7 +45,7 @@ make docker-build-push IMAGE=quay.io/your-org/kessel-kafka-connect
 
 If the build fails with an authentication error mentioning `registry.redhat.io`, ensure you are logged in using your Red Hat Customer Portal credentials. See the [Red Hat Registry Authentication guide](https://access.redhat.com/RegistryAuthentication) for details.
 
-`podman` is used automatically if available, otherwise `docker` is used. Override with `DOCKER=docker make docker-build-push IMAGE=quay.io/your-org/kessel-kafka-connect`.
+The target mirrors the Konflux build. It first runs `make prefetch`, which uses the Hermeto container to download the pinned artifacts into `./hermeto-output`. It then builds with `--network none`, with that directory mounted at `/cachi2/output`. The build step needs `podman`, because `docker build` cannot mount volumes. `make prefetch` on its own works with either `podman` or `docker`.
 
 ### Kafka Connect Deployment
 

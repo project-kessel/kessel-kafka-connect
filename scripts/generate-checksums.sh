@@ -1,35 +1,24 @@
 #!/usr/bin/env bash
 # generate-checksums.sh — Compute SHA-256 checksums for Debezium artifacts.
 #
-# Run this after updating DEBEZIUM_MAVEN_VERSION in the Dockerfile to obtain
-# the new SHA-256 values for pinning.
+# Run this when bumping Debezium: set the new version on both entries in
+# artifacts.lock.yaml, then paste the checksum lines printed here into the
+# matching entries.
 #
 # Usage:
-#   ./scripts/generate-checksums.sh [VERSION]
+#   ./scripts/generate-checksums.sh VERSION      e.g. 3.1.3.Final
 #
-# If VERSION is omitted, it is read from the Dockerfile.
-#
-# Prerequisites: curl, sha256sum, network access to repo1.maven.org
+# Prerequisites: curl, sha256sum or shasum, network access to repo1.maven.org
 
 set -euo pipefail
 
 MAVEN_REPO="https://repo1.maven.org/maven2"
 
-if [ $# -ge 1 ]; then
-    VERSION="$1"
-else
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    DOCKERFILE="$SCRIPT_DIR/../Dockerfile"
-    if [ ! -f "$DOCKERFILE" ]; then
-        echo "ERROR: Cannot find Dockerfile to read version. Pass VERSION as argument."
-        exit 1
-    fi
-    VERSION=$(grep -oP 'DEBEZIUM_MAVEN_VERSION=\K[^\s\\]+' "$DOCKERFILE" | head -1)
-    if [ -z "$VERSION" ]; then
-        echo "ERROR: Cannot parse DEBEZIUM_MAVEN_VERSION from Dockerfile."
-        exit 1
-    fi
+if [ $# -ne 1 ] || [ -z "$1" ]; then
+    echo "Usage: $0 VERSION   (e.g. 3.1.3.Final)" >&2
+    exit 1
 fi
+VERSION="$1"
 
 echo "Computing SHA-256 checksums for Debezium $VERSION"
 echo ""
@@ -38,7 +27,7 @@ TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
 compute_sha256() {
-    local env_name="$1" url="$2"
+    local artifact="$1" url="$2"
     local file="$TMPDIR/$(basename "$url")"
 
     echo "Downloading: $(basename "$url")"
@@ -48,15 +37,19 @@ compute_sha256() {
     fi
 
     local sha256
-    sha256=$(sha256sum "$file" | cut -d' ' -f1)
-    printf '    %s=%s\n' "$env_name" "$sha256"
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256=$(sha256sum "$file" | cut -d' ' -f1)
+    else
+        sha256=$(shasum -a 256 "$file" | cut -d' ' -f1)
+    fi
+    printf '    %-28s checksum: sha256:%s\n' "$artifact" "$sha256"
 }
 
-compute_sha256 "DEBEZIUM_CONNECTOR_POSTGRES_SHA256" \
+compute_sha256 "debezium-connector-postgres" \
     "$MAVEN_REPO/io/debezium/debezium-connector-postgres/$VERSION/debezium-connector-postgres-$VERSION-plugin.tar.gz"
 
-compute_sha256 "DEBEZIUM_SCRIPTING_SHA256" \
+compute_sha256 "debezium-scripting" \
     "$MAVEN_REPO/io/debezium/debezium-scripting/$VERSION/debezium-scripting-$VERSION.tar.gz"
 
 echo ""
-echo "Update the Dockerfile ENV block with the values above."
+echo "Update the version and checksum of each entry in artifacts.lock.yaml with the values above."
